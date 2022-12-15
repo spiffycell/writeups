@@ -31,6 +31,11 @@ Navigating to the webpage:
     - node.js 
     - vue.js
     - express
+        - helpful files:
+            - any central app js files
+            - core functionality
+            - ROUTES!
+                - helps us map out the api endpoints
     - Ubuntu (operating system) 
         - helpful files:
             - `/etc/passwd`
@@ -583,5 +588,7 @@ bean@awkward:~$ cat user.txt
 b2806835e9dc70e40ef987f84ff79649
 bean@awkward:~$ 
 ```
+
+---
 
 
