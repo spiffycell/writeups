@@ -32,7 +32,12 @@ Navigating to the webpage:
     - vue.js
     - express
     - Ubuntu (operating system) 
+        - helpful files:
+            - `/etc/passwd`
+            - `/home/<user>/.bashrc`
     - nginx (web server / reverse proxy)
+        - helpful files:
+            - `/etc/nginx/nginx.conf`, and `/etc/nginx/conf.d/*`
 
 So, it seems that we'll be doing a bit of `js` and `Debian` work
 
