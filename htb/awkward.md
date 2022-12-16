@@ -591,4 +591,64 @@ bean@awkward:~$
 
 ---
 
+## Privilege Escalation
 
+When we try to run `sudo -l`:
+```
+bean@awkward:~$ sudo -l
+[sudo] password for bean: 
+sudo: a password is required
+bean@awkward:~$ 
+```
+
+We get prompted for a password, as opposed to it showing us what we can run with elevated permissions.
+
+---
+
+I'm stumped - so let's break out `linpeas.sh`. Running that, we see a familiar file referenced in the "Processes" section
+```
+================================( Processes, Cron & Services )================================
+[+] Cleaned processes                                                                                                                                        
+[i] Check weird & unexpected proceses run by root: https://book.hacktricks.xyz/linux-unix/privilege-escalation#processes                                     
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND                                                                                   
+root           1  0.0  0.2 166844 11800 ?        Ss   Dec14   0:18 /sbin/init auto noprompt splash
+root         369  0.0  3.3 203792 131544 ?       S<s  Dec14   0:21 /lib/systemd/systemd-journald
+root         402  0.0  0.0 227324   304 ?        Ssl  Dec14   0:00 vmware-vmblock-fuse /run/vmblock-fuse -o rw,subtype=vmware-vmblock,default_permissions,allow_other,dev,suid
+root         430  0.0  0.1  26440  6764 ?        Ss   Dec14   0:00 /lib/systemd/systemd-udevd
+systemd+     640  0.1  0.1  14824  6228 ?        Ss   Dec14   4:06 /lib/systemd/systemd-oomd
+systemd+     641  0.0  0.3  25792 13704 ?        Ss   Dec14   0:20 /lib/systemd/systemd-resolved
+systemd+     642  0.0  0.1  89376  6644 ?        Ssl  Dec14   0:08 /lib/systemd/systemd-timesyncd
+root         658  0.0  0.0  85232  2336 ?        S<sl Dec14   0:00 /sbin/auditd
+_laurel      660  0.0  0.1   7136  5264 ?        S<   Dec14   0:01 /usr/local/sbin/laurel --config /etc/laurel/config.toml
+root         668  0.0  0.2  62388 11660 ?        Ss   Dec14   0:00 /usr/bin/VGAuthService
+root         685  0.1  0.2 327156  9788 ?        Ssl  Dec14   3:42 /usr/bin/vmtoolsd
+root         707  0.0  0.1 101232  5784 ?        Ssl  Dec14   0:00 /sbin/dhclient -1 -4 -v -i -pf /run/dhclient.eth0.pid -lf /var/lib/dhcp/dhclient.eth0.leases -I -df /var/lib/dhcp/dhclient6.eth0.leases eth0
+root         865  0.0  0.1 248560  7764 ?        Ssl  Dec14   0:05 /usr/libexec/accounts-daemon
+root         867  0.0  0.0   2812  1240 ?        Ss   Dec14   0:00 /usr/sbin/acpid
+root         881  0.0  0.0  18148  2944 ?        Ss   Dec14   0:00 /usr/sbin/cron -f -P
+message+     885  0.0  0.1   9956  5624 ?        Ss   Dec14   0:10 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         892  0.0  0.4 269364 18032 ?        Ssl  Dec14   0:17 /usr/sbin/NetworkManager --no-daemon
+root         950  0.0  0.1  82828  3992 ?        Ssl  Dec14   0:10 /usr/sbin/irqbalance --foreground
+root         961  0.0  0.0  18624  3548 ?        Ss   Dec14   0:00 /bin/bash /root/scripts/notify.sh
+root         987  0.0  0.0   2988  1156 ?        S    Dec14   0:00 inotifywait --quiet --monitor --event modify /var/www/private/leave_requests.csv
+root         988  0.0  0.0  18624  1748 ?        S    Dec14   0:00 /bin/bash /root/scripts/notify.sh
+root         989  0.0  0.2 236936  9948 ?        Ssl  Dec14   0:01 /usr/libexec/polkitd --no-debug
+root         995  0.0  0.1 248744  6844 ?        Ssl  Dec14   0:00 /usr/libexec/power-profiles-daemon
+syslog       999  0.0  0.1 222400  6324 ?        Ssl  Dec14   0:03 /usr/sbin/rsyslogd -n -iNONE
+root        1002 
+``` 
+
+Remember the `leave_requests.csv` file referenced in our `awk` command that we exploited to read `/etc/passwd` and other files? 
+```
+exec("awk '/" + user + "/' /var/www/private/leave_requests.csv", {encoding: 'binary', maxBuffer: 51200000}, (error, stdout, stderr) => {
+```
+
+Let's check that out!
+```
+bean@awkward:~$ ls /var/www/private/leave_requests.csv
+ls: cannot access '/var/www/private/leave_requests.csv': Permission denied
+bean@awkward:~$ 
+```
+
+That's no good!
+Let's see if we can pivot to another user account
