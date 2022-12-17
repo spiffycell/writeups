@@ -47,6 +47,17 @@ Our `AndroidManifest.xml` show us the following permission set:
 </manifest> 
 ```
 
-Looks like the app is looking for `android.permission.INTERNET`
+Nothing standing out here. Let's `grep -nr` around for some interesting things - since our password to download was `hackthebox`, let's start with that.
+```
+---$ grep -nr 'hackthebox'
+grep: unknown/okhttp3/internal/publicsuffix/publicsuffixes: binary file matches
+assets/index.android.bundle:406:__d(function(g,r,i,a,m,e,d){Object.defineProperty(e,"__esModule",{value:!0}),e.myConfig=void 0;var t={importantData:"baNaNa".toLowerCase(),apiUrl:'https://www.hackthebox.eu/',debug:'SFRCezIzbTQxbl9jNDFtXzRuZF9kMG43XzB2MzIyMzRjN30='};e.myConfig=t},400,[]);
+```
 
+In `debug`, we find this base64-encoded string
+`SFRCezIzbTQxbl9jNDFtXzRuZF9kMG43XzB2MzIyMzRjN30=`
 
+When we decode it:
+```
+└─$ echo -n 'SFRCezIzbTQxbl9jNDFtXzRuZF9kMG43XzB2MzIyMzRjN30=' | base64 -d
+HTB{23m41n_c41m_4nd_d0n7_0v32234c7}                                     ```
