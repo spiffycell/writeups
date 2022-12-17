@@ -1,6 +1,14 @@
 # Cat
 
-Searching through the internet, looking for a way to extract/unpack an `.ab` file, we come across [this post]() saying that we can use:
+## Getting started
+
+We download the necessary files, using the password `hackthebox`
+
+## Unpacking
+
+So, I don't know offhand how to unpack a backup file via the command line. 
+
+Searching the internet, looking for a way to extract/unpack an `.ab` file, we come across [this post](https://android.stackexchange.com/questions/28481/how-do-you-extract-an-apps-data-from-a-full-backup-made-through-adb-backup/78183#78183) saying that we can use:
 ```
 ( printf "\x1f\x8b\x08\x00\x00\x00\x00\x00" ; tail -c +25 backup.ab ) |  tar xfvz -
 ```
@@ -27,3 +35,6 @@ In the 'shared' folder, we see there are some pictures - of cats!
         ├── Podcasts
         └── Ringtones
 ```
+
+But one of the images is not a cat. :)
+That's our flag!

