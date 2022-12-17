@@ -26,6 +26,12 @@ And we get a directory of the same name...
 app-release  app-release.apk
 ```
 
+Contents of `app-release`:
+```
+└─$ ls                     
+AndroidManifest.xml  apktool.yml  assets  lib  original  res  smali  unknown
+```
+
 Our `AndroidManifest.xml` show us the following permission set:
 ```
 <?xml version="1.0" encoding="utf-8" standalone="no"?><manifest xmlns:android="http://schemas.android.com/apk/res/android" android:compileSdkVersion="29" android:compileSdkVersionCodename="10" package="com.awesomeproject" platformBuildVersionCode="29" platformBuildVersionName="10">
