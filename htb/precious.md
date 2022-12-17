@@ -85,7 +85,12 @@ We get a PDF in a new tab with the contents of our directory!
 
 ### Demonstration:
 
-When we try 'http://10.10.14.37/?name=#{`echo hello`}', we get the following:
+When we try
+```
+'http://10.10.14.37/?name=#{`echo hello`}'
+```
+
+We get the following:
 ```
 Directory listing for /?name=#{`echo hello`}
 ```
@@ -105,7 +110,12 @@ Also not what we were looking for!
 - If we purposely inject a url-encoded character (like a space - `%20`)
     - Will that trick the parser into running the input?
 
-Running "http://10.10.14.37/?name=#{'%20`echo hello`'}", we get:
+Running
+```
+"http://10.10.14.37/?name=#{'%20`echo hello`'}"
+```
+
+We get:
 ```
 10.10.11.189 - - [17/Dec/2022 12:29:01] "GET /?name= HTTP/1.1" 200 -
 ```
