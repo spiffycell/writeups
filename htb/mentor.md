@@ -97,6 +97,7 @@ MANY requests come back with `302` and `400`, and generate a lot of noise.
 We do get back a `404` status for `api`, so let's try `http://api.mentorquotes.htb
 - now how about we check for endpoints to this subdomain?
 
-
-
+After fuzzing for a bit, we find a couple of endpoints:
+```
+```
 
