@@ -1,0 +1,29 @@
+# Cat
+
+Searching through the internet, looking for a way to extract/unpack an `.ab` file, we come across [this post]() saying that we can use:
+```
+( printf "\x1f\x8b\x08\x00\x00\x00\x00\x00" ; tail -c +25 backup.ab ) |  tar xfvz -
+```
+
+Lucky for us, it works!
+
+In the 'shared' folder, we see there are some pictures - of cats!
+```
+└── shared
+    └── 0
+        ├── Alarms
+        ├── DCIM
+        ├── Download
+        ├── Movies
+        ├── Music
+        ├── Notifications
+        ├── Pictures
+        │   ├── IMAG0001.jpg
+        │   ├── IMAG0002.jpg
+        │   ├── IMAG0003.jpg
+        │   ├── IMAG0004.jpg
+        │   ├── IMAG0005.jpg
+        │   └── IMAG0006.jpg
+        ├── Podcasts
+        └── Ringtones
+```
