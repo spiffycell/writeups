@@ -119,7 +119,4 @@ Not seeing much pop up as a result of that
 
 ---
 
-If we remember from before, the app is using jQuery 3.2.1
-- [Snyk](https://security.snyk.io/vuln/SNYK-JS-JQUERY-567880) says that jQuery has a Cross-Site Scripting vuln
 
-Can we open up the console and leverage that?
