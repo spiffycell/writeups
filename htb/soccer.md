@@ -90,3 +90,31 @@ Let's take a closer look at this cookie
 ```
 
 Crackstation does not recognize the string combination as any particular hashing algorithm
+
+---
+
+We also haven't enumerated subdomains, so let's use `wfuzz` to do that
+```
+└─$ wfuzz -c -w /opt/SecLists/Discovery/Web-Content/raft-small-words-lowercase.txt -u 'http://soccer.htb' -H "Host: FUZZ.soccer.htb" --hc 400,301
+ /usr/lib/python3/dist-packages/wfuzz/__init__.py:34: UserWarning:Pycurl is not compiled against Openssl. Wfuzz might not work correctly when fuzzing SSL sites. Check Wfuzz's documentation for more information.
+********************************************************
+* Wfuzz 3.1.0 - The Web Fuzzer                         *
+********************************************************
+
+Target: http://soccer.htb/
+Total requests: 38267
+
+=====================================================================
+ID           Response   Lines    Word       Chars       Payload                                                                                     
+=====================================================================
+
+
+Total time: 0
+Processed Requests: 38267
+Filtered Requests: 38267
+Requests/sec.: 0
+```
+
+Not seeing much pop up as a result of that
+
+
